@@ -92,20 +92,11 @@ connect_port(LV2_Handle instance,
   
 }
 
-// Works on little-endian machines only
-static inline bool
-is_nan(float& value ) {
-	if (((*(uint32_t *) &value) & 0x7fffffff) > 0x7f800000) {
-		return true;
-	}
-return false;
-}
-
 // Force already-denormal float value to zero
 static inline void
-sanitize_denormal(float& value) {
-	if (is_nan(value)) {
-		value = 0.f;
+sanitize_denormal(float* value) {
+	if (fpclassify(*value) != FP_NORMAL) {
+		*value = 0.f;
 	}
 }
 
@@ -154,7 +145,7 @@ run(LV2_Handle instance, uint32_t n_samples)
 	for (uint32_t i = 0; i < n_samples; ++i) {
 		yg=0.f;
 		xg = (input[i]==0.f) ? -160.f : to_dB(fabs(input[i]));
-		sanitize_denormal(xg);
+		sanitize_denormal(&xg);
     
     
 		if (2.f*(xg-thresdb)<-width) {
@@ -165,16 +156,14 @@ run(LV2_Handle instance, uint32_t n_samples)
 			yg = thresdb + (xg-thresdb)/ratio;
 		}
     
-		sanitize_denormal(yg);
+		sanitize_denormal(&yg);
     
 		xl = xg - yg;
-		sanitize_denormal(zamcomp->old_y1);
-		sanitize_denormal(zamcomp->old_yl);
     
 		y1 = fmaxf(xl, release_coeff * zamcomp->old_y1+(1.f-release_coeff)*xl);
 		yl = attack_coeff * zamcomp->old_yl+(1.f-attack_coeff)*y1;
-		sanitize_denormal(y1);
-		sanitize_denormal(yl);
+		sanitize_denormal(&y1);
+		sanitize_denormal(&yl);
     
 		cdb = -yl;
 		gain = from_dB(cdb);

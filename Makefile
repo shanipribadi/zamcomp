@@ -8,7 +8,7 @@ OPTIMIZATIONS ?= -msse -msse2 -mfpmath=sse -ffast-math -fomit-frame-pointer -O3 
 
 LDFLAGS ?= -Wl,--as-needed
 CXXFLAGS ?= $(OPTIMIZATIONS) -Wall
-CFLAGS ?= $(OPTIMIZATIONS) -Wall
+CFLAGS ?= $(OPTIMIZATIONS) -Wall -std=gnu11
 
 ###############################################################################
 BUNDLE = zamcomp.lv2
@@ -45,8 +45,8 @@ $(BUNDLE): manifest.ttl zamcomp.ttl zamcomp$(LIB_EXT)
 	cp manifest.ttl zamcomp.ttl zamcomp$(LIB_EXT) $(BUNDLE)
 
 zamcomp$(LIB_EXT): zamcomp.c
-	$(CXX) -o zamcomp$(LIB_EXT) \
-		$(CXXFLAGS) \
+	$(CC) -o zamcomp$(LIB_EXT) \
+		$(CFLAGS) \
 		zamcomp.c \
 		$(LV2FLAGS) $(LDFLAGS)
 
